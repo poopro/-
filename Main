@@ -1,0 +1,572 @@
+import React, { useState } from 'react';
+import { Brain, ArrowRight, RotateCcw, Trophy, Target, Users, Zap, Compass, CheckCircle2 } from 'lucide-react';
+
+// 定義 34 項才幹與所屬領域
+const STRENGTHS_DATA = {
+  // 執行力 (Executing)
+  "成就 (Achiever)": { domain: "執行力", desc: "擁有強大的內在動力，渴望每天都有所建樹，不知疲倦。" },
+  "統籌 (Arranger)": { domain: "執行力", desc: "面對複雜變數時，能像指揮家一樣找出最高效的資源配置方式。" },
+  "信仰 (Belief)": { domain: "執行力", desc: "擁有不變的核心價值觀，為工作與生活賦予明確的目的與意義。" },
+  "公平 (Consistency)": { domain: "執行力", desc: "深信平等待人，致力於建立清晰、一致的規則與標準。" },
+  "審慎 (Deliberative)": { domain: "執行力", desc: "行事謹慎，能預見潛在風險，在做決定前會仔細評估所有可能。" },
+  "紀律 (Discipline)": { domain: "執行力", desc: "喜歡井然有序的世界，透過建立常規與結構來掌控進度。" },
+  "專注 (Focus)": { domain: "執行力", desc: "一旦設定目標，便能排除干擾，保持高度專注直到達成。" },
+  "責任 (Responsibility)": { domain: "執行力", desc: "對承諾的事情有強烈的心理所有權，言出必行，重視信譽。" },
+  "排難 (Restorative)": { domain: "執行力", desc: "熱衷於解決問題，擅長找出故障原因並使其恢復正常運作。" },
+  // 影響力 (Influencing)
+  "行動 (Activator)": { domain: "影響力", desc: "認為行動勝於空談，渴望將想法立刻付諸實踐。" },
+  "統率 (Command)": { domain: "影響力", desc: "不畏懼衝突，在混亂中敢於站出來承擔控制權並做出決定。" },
+  "溝通 (Communication)": { domain: "影響力", desc: "擅長將枯燥的想法轉化為生動的故事或語言，極具感染力。" },
+  "競爭 (Competition)": { domain: "影響力", desc: "透過與他人比較來衡量自己的進步，渴望在競賽中獲勝。" },
+  "追求 (Maximizer)": { domain: "影響力", desc: "專注於將「優秀」提升為「卓越」，而非修補平庸的弱點。" },
+  "自信 (Self-Assurance)": { domain: "影響力", desc: "對自己的決策與能力充滿內在信心，具備強大的直覺。" },
+  "意義 (Significance)": { domain: "影響力", desc: "渴望對他人產生重大影響，希望被視為重要且有價值的人。" },
+  "取悅 (Woo)": { domain: "影響力", desc: "熱愛結交新朋友並贏得他們的好感，能迅速打破社交堅冰。" },
+  // 關係建立 (Relationship Building)
+  "適應 (Adaptability)": { domain: "關係建立", desc: "活在當下，能靈活應對突如其來的變化，隨遇而安。" },
+  "關聯 (Connectedness)": { domain: "關係建立", desc: "相信萬物皆有聯繫，認為世上沒有偶然，重視宏觀的牽絆。" },
+  "伯樂 (Developer)": { domain: "關係建立", desc: "能看見他人的潛力，並因為幫助他人成長與進步而感到滿足。" },
+  "體諒 (Empathy)": { domain: "關係建立", desc: "能設身處地感受他人的情緒，彷彿那是自己的一樣。" },
+  "和諧 (Harmony)": { domain: "關係建立", desc: "尋求共識，不喜歡衝突，致力於尋找雙方都能接受的共同點。" },
+  "包容 (Includer)": { domain: "關係建立", desc: "注意那些被邊緣化的人，並努力將他們拉進群體中。" },
+  "個別 (Individualization)": { domain: "關係建立", desc: "對每個人的獨特特質深感興趣，擅長將不同的人組合在一起。" },
+  "積極 (Positivity)": { domain: "關係建立", desc: "充滿熱情與樂觀，能用正能量感染周圍的人。" },
+  "交往 (Relator)": { domain: "關係建立", desc: "享受與已經認識的人建立緊密、深入的關係，重視信任。" },
+  // 戰略思維 (Strategic Thinking)
+  "分析 (Analytical)": { domain: "戰略思維", desc: "堅持「證明給我看」，喜歡探究數據和原因以確保邏輯嚴密。" },
+  "回顧 (Context)": { domain: "戰略思維", desc: "透過理解過去來尋找未來的答案，重視歷史與背景脈絡。" },
+  "前瞻 (Futuristic)": { domain: "戰略思維", desc: "對未來充滿憧憬，能用清晰的願景激勵自己與他人。" },
+  "理念 (Ideation)": { domain: "戰略思維", desc: "為新點子著迷，能從看似不相關的現象中找出底層的連結。" },
+  "收集 (Input)": { domain: "戰略思維", desc: "擁有強烈的好奇心，喜歡收集各種資訊、文字、物品或想法。" },
+  "思維 (Intellection)": { domain: "戰略思維", desc: "享受深度的智力活動與獨處思考，大腦時常保持活躍。" },
+  "學習 (Learner)": { domain: "戰略思維", desc: "享受從無知到熟練的學習過程本身，大於對最終結果的追求。" },
+  "戰略 (Strategic)": { domain: "戰略思維", desc: "面對複雜情況，能迅速在腦中推演各種路徑，找出最佳方案。" }
+};
+
+// 30 個情境題目
+const QUESTIONS = [
+  {
+    scenario: "當你在一架遭遇亂流、警報大作的飛機上（如同文件案例），你的「第一反應」會是：",
+    options: [
+      { text: "立刻站出來指揮，詢問機組人員狀況並安撫周圍。（統率）", trait: "統率 (Command)" },
+      { text: "冷靜觀察儀表板、燈光或尋找亂流的邏輯原因。（分析）", trait: "分析 (Analytical)" },
+      { text: "迅速在腦海中模擬多種可能的應變方案與逃生路線。（戰略）", trait: "戰略 (Strategic)" },
+      { text: "第一時間關注身邊同行者的情緒，給予安慰與陪伴。（體諒）", trait: "體諒 (Empathy)" }
+    ]
+  },
+  {
+    scenario: "當團隊面臨一個完全陌生的新挑戰，你的直覺做法是：",
+    options: [
+      { text: "別想太多，先動手試試看，在行動中調整。（行動）", trait: "行動 (Activator)" },
+      { text: "興奮地開始查閱各種資料，享受吸收新知識的過程。（學習）", trait: "學習 (Learner)" },
+      { text: "盤點團隊成員的特長，把不同任務分派給最適合的人。（統籌）", trait: "統籌 (Arranger)" },
+      { text: "確保所有人都明白這個挑戰的意義和核心價值觀。（信仰）", trait: "信仰 (Belief)" }
+    ]
+  },
+  {
+    scenario: "參加一場有許多陌生人的大型社交聚會，你會：",
+    options: [
+      { text: "主動出擊，享受結交新朋友並打破僵局的快感。（取悅）", trait: "取悅 (Woo)" },
+      { text: "尋找落單的人，主動邀請他們加入對話。（包容）", trait: "包容 (Includer)" },
+      { text: "找到一兩個合得來的人，進行深入且有質量的長談。（交往）", trait: "交往 (Relator)" },
+      { text: "默默觀察大家的行為模式和互動邏輯。（思維）", trait: "思維 (Intellection)" }
+    ]
+  },
+  {
+    scenario: "當你負責推進一項進度嚴重落後的專案時：",
+    options: [
+      { text: "加班加點，靠自己強大的執行力把進度趕回來。（成就）", trait: "成就 (Achiever)" },
+      { text: "精準找出卡關的「病灶」，並針對性地修復它。（排難）", trait: "排難 (Restorative)" },
+      { text: "重新梳理SOP，建立更嚴格的紀律與日程表。（紀律）", trait: "紀律 (Discipline)" },
+      { text: "用極大的熱情鼓舞士氣，讓大家相信一定能做到。（積極）", trait: "積極 (Positivity)" }
+    ]
+  },
+  {
+    scenario: "在會議上，兩位核心成員因為意見不合發生激烈爭執：",
+    options: [
+      { text: "出面調停，尋求雙方都能接受的共同點與共識。（和諧）", trait: "和諧 (Harmony)" },
+      { text: "不怕氣氛僵，強制介入並做出最終的裁決。（統率）", trait: "統率 (Command)" },
+      { text: "敏銳察覺雙方獨特的立場，並試圖解釋給對方聽。（個別）", trait: "個別 (Individualization)" },
+      { text: "要求雙方拿出數據或客觀事實來證明各自的論點。（分析）", trait: "分析 (Analytical)" }
+    ]
+  },
+  {
+    scenario: "當你完成了一件工作，但你覺得「還能更好」時：",
+    options: [
+      { text: "不斷打磨細節，渴望將其從「優秀」推向「卓越」。（追求）", trait: "追求 (Maximizer)" },
+      { text: "思考這次的經驗能如何應用在未來更宏大的願景中。（前瞻）", trait: "前瞻 (Futuristic)" },
+      { text: "立刻設定下一個更高的目標，不能停下腳步。（成就）", trait: "成就 (Achiever)" },
+      { text: "思考這個成果是否能為我帶來更多的認可或影響力。（意義）", trait: "意義 (Significance)" }
+    ]
+  },
+  {
+    scenario: "閒暇時間，你最常產生「渴望（Yearning）」去做的事是：",
+    options: [
+      { text: "一個人靜靜地深度思考或閱讀，享受腦力激盪。（思維）", trait: "思維 (Intellection)" },
+      { text: "收集各種有趣的文章、語錄或小物件。（收集）", trait: "收集 (Input)" },
+      { text: "列出待辦清單，並享受一一打勾的快感。（成就）", trait: "成就 (Achiever)" },
+      { text: "找機會和別人分享你的觀點，說服或感染他們。（溝通）", trait: "溝通 (Communication)" }
+    ]
+  },
+  {
+    scenario: "面對一個需要深思熟慮的重大決策：",
+    options: [
+      { text: "列出所有潛在風險，謹慎評估後才敢邁出下一步。（審慎）", trait: "審慎 (Deliberative)" },
+      { text: "回顧過去類似的歷史經驗，從中尋找解答的線索。（回顧）", trait: "回顧 (Context)" },
+      { text: "相信自己內心的直覺，做決定後就不輕易動搖。（自信）", trait: "自信 (Self-Assurance)" },
+      { text: "確保這個決定對所有相關人員都是公平、一致的。（公平）", trait: "公平 (Consistency)" }
+    ]
+  },
+  {
+    scenario: "看待團隊中的新人，你最自然的視角是：",
+    options: [
+      { text: "看到他的潛力，並樂於一步步引導、見證他的成長。（伯樂）", trait: "伯樂 (Developer)" },
+      { text: "觀察他的獨特天賦，思考他最適合團隊的哪個位置。（個別）", trait: "個別 (Individualization)" },
+      { text: "暗中將他的表現與其他人比較，激發競爭意識。（競爭）", trait: "競爭 (Competition)" },
+      { text: "確保他清楚了解並遵守團隊的規則與紀律。（紀律）", trait: "紀律 (Discipline)" }
+    ]
+  },
+  {
+    scenario: "當你的大腦處於「心流」狀態時，你通常在做什麼？",
+    options: [
+      { text: "將雜亂無章的資訊或變數，整理成高效的運作系統。（統籌）", trait: "統籌 (Arranger)" },
+      { text: "產生源源不絕的新點子，發現事物之間奇妙的聯繫。（理念）", trait: "理念 (Ideation)" },
+      { text: "專心致志地朝著一個明確的目標衝刺，排除萬難。（專注）", trait: "專注 (Focus)" },
+      { text: "傾聽他人的心聲，與對方建立深刻的情感共鳴。（體諒）", trait: "體諒 (Empathy)" }
+    ]
+  },
+  {
+    scenario: "當你被委派一項重要但資源匱乏的任務：",
+    options: [
+      { text: "因為這是我的承諾，無論如何我都會負責任地完成。（責任）", trait: "責任 (Responsibility)" },
+      { text: "在腦中快速推演「如果這樣…會怎樣」，找出捷徑。（戰略）", trait: "戰略 (Strategic)" },
+      { text: "把這看作是一場比賽，決心做得比其他團隊更好。（競爭）", trait: "競爭 (Competition)" },
+      { text: "隨機應變，根據當下能拿到的資源靈活調整做法。（適應）", trait: "適應 (Adaptability)" }
+    ]
+  },
+  {
+    scenario: "你認為一個好的領導者最應該具備：",
+    options: [
+      { text: "描繪出清晰且令人嚮往的未來願景。（前瞻）", trait: "前瞻 (Futuristic)" },
+      { text: "說到做到，建立起絕對的誠信與責任感。（責任）", trait: "責任 (Responsibility)" },
+      { text: "強大的溝通能力，能把複雜概念講得深入淺出。（溝通）", trait: "溝通 (Communication)" },
+      { text: "能夠察覺團隊的情緒起伏並給予支持。（體諒）", trait: "體諒 (Empathy)" }
+    ]
+  },
+  {
+    scenario: "看待世界萬物，你內心深處的信念是：",
+    options: [
+      { text: "一切事出必有因，我們都在一個巨大的聯繫網路中。（關聯）", trait: "關聯 (Connectedness)" },
+      { text: "萬物都有其底層邏輯，只要分析數據就能找到答案。（分析）", trait: "分析 (Analytical)" },
+      { text: "世界充滿了需要被修復和改進的問題。（排難）", trait: "排難 (Restorative)" },
+      { text: "每個人都是獨一無二的個體，不能一概而論。（個別）", trait: "個別 (Individualization)" }
+    ]
+  },
+  {
+    scenario: "當你聽到一個絕妙的新點子時：",
+    options: [
+      { text: "迫不及待想要立刻動手試試看，不想等完美計畫。（行動）", trait: "行動 (Activator)" },
+      { text: "馬上聯想到其他三個點子，大腦開始興奮地發散。（理念）", trait: "理念 (Ideation)" },
+      { text: "思考這個點子背後的價值觀是否符合我的信念。（信仰）", trait: "信仰 (Belief)" },
+      { text: "立刻評估要實現這個點子需要哪些資源和步驟。（統籌）", trait: "統籌 (Arranger)" }
+    ]
+  },
+  {
+    scenario: "如果要在團隊中發揮最大價值，你希望自己是：",
+    options: [
+      { text: "那個總是能把氣氛炒熱、帶來正能量的人。（積極）", trait: "積極 (Positivity)" },
+      { text: "那個能冷靜指出計畫漏洞並防止出錯的把關者。（審慎）", trait: "審慎 (Deliberative)" },
+      { text: "那個大家遇到困難時，第一時間信任並傾訴的對象。（交往）", trait: "交往 (Relator)" },
+      { text: "那個不斷吸收新知，提供團隊豐富資訊庫的人。（收集）", trait: "收集 (Input)" }
+    ]
+  },
+  {
+    scenario: "面對規則與制度，你的態度是：",
+    options: [
+      { text: "非常重視，認為清晰的規則才能帶來公平。（公平）", trait: "公平 (Consistency)" },
+      { text: "規則是基礎，我喜歡建立結構讓事情井井有條。（紀律）", trait: "紀律 (Discipline)" },
+      { text: "只要不違背核心信仰，規則可以有彈性。（信仰）", trait: "信仰 (Belief)" },
+      { text: "如果規則阻礙了行動，我會想辦法繞過或打破它。（行動）", trait: "行動 (Activator)" }
+    ]
+  },
+  {
+    scenario: "要說服別人接受你的提案，你通常會：",
+    options: [
+      { text: "準備詳盡的數據和邏輯推演過程。（分析）", trait: "分析 (Analytical)" },
+      { text: "講述一個引人入勝的故事，激發他們的情感共鳴。（溝通）", trait: "溝通 (Communication)" },
+      { text: "展現無比的自信，讓他們相信你的直覺是對的。（自信）", trait: "自信 (Self-Assurance)" },
+      { text: "指出如果不這麼做，將會面臨的具體風險。（審慎）", trait: "審慎 (Deliberative)" }
+    ]
+  },
+  {
+    scenario: "當同事向你抱怨工作壓力大時，你的第一反應：",
+    options: [
+      { text: "敏銳感受到他的痛苦，默默陪伴並給予精神支持。（體諒）", trait: "體諒 (Empathy)" },
+      { text: "馬上幫他分析問題出在哪，並提供解決方案。（排難）", trait: "排難 (Restorative)" },
+      { text: "用樂觀的態度鼓勵他，告訴他事情會好轉的。（積極）", trait: "積極 (Positivity)" },
+      { text: "幫他回顧過去成功的經驗，找回他的力量。（回顧）", trait: "回顧 (Context)" }
+    ]
+  },
+  {
+    scenario: "準備一場重要的演講，你最在意的是：",
+    options: [
+      { text: "這場演講能否為我帶來足夠的影響力與關注。（意義）", trait: "意義 (Significance)" },
+      { text: "內容是否從「好」提升到了無懈可擊的「卓越」。（追求）", trait: "追求 (Maximizer)" },
+      { text: "我的主旨是否緊扣目標，沒有任何多餘的廢話。（專注）", trait: "專注 (Focus)" },
+      { text: "是否能把零散的素材整合成一個完美的架構。（統籌）", trait: "統籌 (Arranger)" }
+    ]
+  },
+  {
+    scenario: "你認為自己在學習上的「天賦信號（快速學習）」體現在：",
+    options: [
+      { text: "享受從0到1的過程，即使學的東西跟工作無關也快樂。（學習）", trait: "學習 (Learner)" },
+      { text: "能迅速看透事物的全局戰略，知道下一步該怎麼走。（戰略）", trait: "戰略 (Strategic)" },
+      { text: "能很快記住別人的名字、喜好，並建立連結。（取悅）", trait: "取悅 (Woo)" },
+      { text: "能輕易看見別人看不到的隱藏規律或聯繫。（理念）", trait: "理念 (Ideation)" }
+    ]
+  },
+  {
+    scenario: "面對不可預知的變數，你的內心狀態是：",
+    options: [
+      { text: "感到自在，我很享受隨機應變帶來的靈活性。（適應）", trait: "適應 (Adaptability)" },
+      { text: "感到焦慮，我喜歡凡事都在計畫與紀律之中。（紀律）", trait: "紀律 (Discipline)" },
+      { text: "相信不管發生什麼，冥冥之中都有其意義與安排。（關聯）", trait: "關聯 (Connectedness)" },
+      { text: "立刻掌控局面，不允許變數影響大局。（統率）", trait: "統率 (Command)" }
+    ]
+  },
+  {
+    scenario: "工作中最讓你感到「滿足（Satisfaction）」的瞬間是：",
+    options: [
+      { text: "每天下班前，看著清單上的任務全部被劃掉。（成就）", trait: "成就 (Achiever)" },
+      { text: "看到我帶領或幫助過的人，取得了巨大的進步。（伯樂）", trait: "伯樂 (Developer)" },
+      { text: "我的意見被高度重視，對團隊產生了深遠影響。（意義）", trait: "意義 (Significance)" },
+      { text: "發現了一個被所有人忽略的歷史原因或背景脈絡。（回顧）", trait: "回顧 (Context)" }
+    ]
+  },
+  {
+    scenario: "在一個項目結束後進行復盤，你通常關注：",
+    options: [
+      { text: "我們是否達成了當初承諾的所有指標。（責任）", trait: "責任 (Responsibility)" },
+      { text: "團隊在合作過程中是否保持了和諧與愉快。（和諧）", trait: "和諧 (Harmony)" },
+      { text: "這次的經驗如何幫助我們描繪更宏大的未來藍圖。（前瞻）", trait: "前瞻 (Futuristic)" },
+      { text: "我們在競爭對手中處於什麼位置，下次如何贏。（競爭）", trait: "競爭 (Competition)" }
+    ]
+  },
+  {
+    scenario: "當你要開始一項複雜的研究：",
+    options: [
+      { text: "像海綿一樣瘋狂收集各種書籍、網頁和資料。（收集）", trait: "收集 (Input)" },
+      { text: "沉浸在自己的大腦中，反覆推敲底層的哲學或邏輯。（思維）", trait: "思維 (Intellection)" },
+      { text: "設定一個雷射般的焦點，過濾掉所有不相關的資訊。（專注）", trait: "專注 (Focus)" },
+      { text: "找幾個信任的老朋友，深入討論以獲取靈感。（交往）", trait: "交往 (Relator)" }
+    ]
+  },
+  {
+    scenario: "你最討厭哪種情況發生？",
+    options: [
+      { text: "有人被團體冷落或排擠。（包容）", trait: "包容 (Includer)" },
+      { text: "大家盲目樂觀，不願面對潛在的危機。（審慎）", trait: "審慎 (Deliberative)" },
+      { text: "事情停滯不前，大家只說不做。（行動）", trait: "行動 (Activator)" },
+      { text: "資源被浪費，沒有被安排在最有效率的地方。（統籌）", trait: "統籌 (Arranger)" }
+    ]
+  },
+  {
+    scenario: "當你面對自己的弱點時（如同文件中提到的策略）：",
+    options: [
+      { text: "找一個能力互補的人搭檔，將劣勢影響降到最低。（個別）", trait: "個別 (Individualization)" },
+      { text: "用我追求卓越的優勢去掩蓋它，只專注在強項。（追求）", trait: "追求 (Maximizer)" },
+      { text: "冷靜分析這個弱點造成的損失，並制定避險計畫。（分析）", trait: "分析 (Analytical)" },
+      { text: "相信憑藉強大的內在自信，這些都不是阻礙。（自信）", trait: "自信 (Self-Assurance)" }
+    ]
+  },
+  {
+    scenario: "對你來說，最完美的團隊是：",
+    options: [
+      { text: "大家價值觀一致，為著同一個神聖的信念奮鬥。（信仰）", trait: "信仰 (Belief)" },
+      { text: "沒有勾心鬥角，氣氛和諧，大家像一家人。（和諧）", trait: "和諧 (Harmony)" },
+      { text: "每個人都有極強的執行力和不達目的不罷休的衝勁。（成就）", trait: "成就 (Achiever)" },
+      { text: "每個人都有獨特才華，像完美的拼圖一樣互補。（個別）", trait: "個別 (Individualization)" }
+    ]
+  },
+  {
+    scenario: "當你聽到「放眼未來」這句話，你的感受是：",
+    options: [
+      { text: "非常興奮，我腦中已經有了一幅清晰的未來藍圖。（前瞻）", trait: "前瞻 (Futuristic)" },
+      { text: "覺得有點空泛，我更關心今天該完成什麼具體任務。（專注）", trait: "專注 (Focus)" },
+      { text: "開始思考達成這個未來需要哪些戰略步驟。（戰略）", trait: "戰略 (Strategic)" },
+      { text: "覺得沒有過去的歷史基礎，空談未來是不切實際的。（回顧）", trait: "回顧 (Context)" }
+    ]
+  },
+  {
+    scenario: "在生活中，你經常扮演的角色是：",
+    options: [
+      { text: "承諾必達的靠山，別人交辦的事絕對放心。（責任）", trait: "責任 (Responsibility)" },
+      { text: "點燃氣氛的火種，有你在的地方就有歡笑和動力。（積極）", trait: "積極 (Positivity)" },
+      { text: "解決疑難雜症的專家，哪裡壞了就去修哪裡。（排難）", trait: "排難 (Restorative)" },
+      { text: "打破社交堅冰的橋樑，能迅速跟任何人熟絡起來。（取悅）", trait: "取悅 (Woo)" }
+    ]
+  },
+  {
+    scenario: "總結來說，你覺得自己最大的優勢源自於：",
+    options: [
+      { text: "我對萬物關聯的洞察與接納。（關聯）", trait: "關聯 (Connectedness)" },
+      { text: "我不斷學習、吸收資訊的渴望。（學習）", trait: "學習 (Learner)" },
+      { text: "我建立規則、確保公平的能力。（公平）", trait: "公平 (Consistency)" },
+      { text: "我極致追求完美與卓越的標準。（追求）", trait: "追求 (Maximizer)" }
+    ]
+  }
+];
+
+const App = () => {
+  const [step, setStep] = useState('intro'); // intro, quiz, result
+  const [currentQ, setCurrentQ] = useState(0);
+  const [scores, setScores] = useState({});
+
+  const handleStart = () => {
+    setScores({});
+    setCurrentQ(0);
+    setStep('quiz');
+  };
+
+  const handleAnswer = (trait) => {
+    setScores(prev => ({
+      ...prev,
+      [trait]: (prev[trait] || 0) + 1
+    }));
+
+    if (currentQ < QUESTIONS.length - 1) {
+      setCurrentQ(currentQ + 1);
+    } else {
+      setStep('result');
+    }
+  };
+
+  const getResults = () => {
+    // 排序分數
+    const sortedTraits = Object.entries(scores)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5); // 取前五名
+
+    // 計算四大領域分布
+    const domainCounts = { "執行力": 0, "影響力": 0, "關係建立": 0, "戰略思維": 0 };
+    Object.entries(scores).forEach(([trait, score]) => {
+      const domain = STRENGTHS_DATA[trait]?.domain;
+      if (domain) {
+        domainCounts[domain] += score;
+      }
+    });
+
+    const totalScore = Object.values(scores).reduce((a, b) => a + b, 0) || 1;
+
+    return { topTraits: sortedTraits, domains: domainCounts, totalScore };
+  };
+
+  if (step === 'intro') {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="max-w-2xl w-full bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div className="bg-indigo-600 p-8 text-white text-center">
+            <Brain className="w-16 h-16 mx-auto mb-4 opacity-90" />
+            <h1 className="text-3xl font-black mb-2">優勢識別器 (StrengthsFinder)</h1>
+            <p className="text-indigo-100">30 個情境測評：找到你的天賦「源碼」</p>
+          </div>
+          <div className="p-8 space-y-6">
+            <p className="text-gray-700 leading-relaxed text-lg">
+              根據《發現你的優勢》文件指出，要發現才能，最關鍵的是留意你在特定情境下的<strong className="text-indigo-600">「第一反應、渴望與快速學習」</strong>。
+            </p>
+            <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
+              <ul className="space-y-3 text-sm text-gray-700">
+                <li className="flex items-start">
+                  <CheckCircle2 className="w-5 h-5 text-indigo-500 mr-2 flex-shrink-0" />
+                  <span>本測評包含 30 個精選情境。</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle2 className="w-5 h-5 text-indigo-500 mr-2 flex-shrink-0" />
+                  <span>請憑<strong className="text-red-500">直覺（第一反應）</strong>作答，不要過度思考「應該」怎麼做。</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle2 className="w-5 h-5 text-indigo-500 mr-2 flex-shrink-0" />
+                  <span>測驗結束後，將根據蓋洛普 34 項才幹為你解析專屬的「Top 5 優勢」。</span>
+                </li>
+              </ul>
+            </div>
+            <button 
+              onClick={handleStart}
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2 text-lg shadow-lg hover:shadow-indigo-200"
+            >
+              開始探索我的優勢 <ArrowRight className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === 'quiz') {
+    const q = QUESTIONS[currentQ];
+    const progress = ((currentQ + 1) / QUESTIONS.length) * 100;
+
+    return (
+      <div className="min-h-screen bg-slate-50 py-8 px-4 flex flex-col items-center">
+        <div className="max-w-3xl w-full">
+          {/* Progress Bar */}
+          <div className="mb-8">
+            <div className="flex justify-between text-sm text-gray-500 mb-2 font-bold">
+              <span>進度：{currentQ + 1} / {QUESTIONS.length}</span>
+              <span>{Math.round(progress)}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <div 
+                className="bg-indigo-600 h-3 rounded-full transition-all duration-300"
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
+          </div>
+
+          {/* Question Card */}
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-6 border border-slate-100 animate-in fade-in slide-in-from-bottom-4">
+            <div className="p-6 md:p-8 bg-indigo-50/50 border-b border-indigo-50">
+              <h2 className="text-xl md:text-2xl font-bold text-slate-800 leading-relaxed">
+                {q.scenario}
+              </h2>
+            </div>
+            <div className="p-4 md:p-6 grid grid-cols-1 gap-3">
+              {q.options.map((opt, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleAnswer(opt.trait)}
+                  className="w-full text-left p-4 md:p-5 rounded-xl border-2 border-slate-100 hover:border-indigo-500 hover:bg-indigo-50 transition-all group flex items-start gap-3"
+                >
+                  <div className="mt-0.5 bg-white border-2 border-slate-200 group-hover:border-indigo-500 w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center">
+                    <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  </div>
+                  <span className="text-gray-700 font-medium group-hover:text-indigo-900">
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === 'result') {
+    const { topTraits, domains, totalScore } = getResults();
+
+    const getDomainColor = (domain) => {
+      switch(domain) {
+        case '執行力': return 'bg-purple-100 text-purple-800 border-purple-200';
+        case '影響力': return 'bg-orange-100 text-orange-800 border-orange-200';
+        case '關係建立': return 'bg-pink-100 text-pink-800 border-pink-200';
+        case '戰略思維': return 'bg-blue-100 text-blue-800 border-blue-200';
+        default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      }
+    };
+
+    const getDomainIcon = (domain) => {
+      switch(domain) {
+        case '執行力': return <Target className="w-4 h-4 mr-1" />;
+        case '影響力': return <Zap className="w-4 h-4 mr-1" />;
+        case '關係建立': return <Users className="w-4 h-4 mr-1" />;
+        case '戰略思維': return <Compass className="w-4 h-4 mr-1" />;
+        default: return null;
+      }
+    };
+
+    return (
+      <div className="min-h-screen bg-slate-50 py-8 px-4 flex justify-center">
+        <div className="max-w-3xl w-full space-y-6">
+          
+          <div className="bg-white rounded-2xl shadow-xl p-8 text-center animate-in zoom-in duration-500 border-t-8 border-indigo-600">
+            <Trophy className="w-16 h-16 mx-auto text-yellow-500 mb-4" />
+            <h2 className="text-3xl font-black text-slate-800 mb-2">你的專屬優勢報告</h2>
+            <p className="text-slate-500">根據你的第一反應，以下是你最強大的才幹組合</p>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 animate-in slide-in-from-bottom-4 duration-500 delay-150">
+            <h3 className="text-xl font-bold border-b pb-4 mb-6 flex items-center gap-2">
+              <Brain className="text-indigo-600" />
+              Top 5 核心才幹
+            </h3>
+            <div className="space-y-4">
+              {topTraits.map(([trait, score], idx) => {
+                const info = STRENGTHS_DATA[trait] || { domain: '未知', desc: '無資料' };
+                return (
+                  <div key={trait} className="flex flex-col md:flex-row gap-4 p-4 rounded-xl border bg-slate-50/50 items-start md:items-center">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-md">
+                      {idx + 1}
+                    </div>
+                    <div className="flex-grow">
+                      <div className="flex items-center gap-3 mb-1">
+                        <h4 className="text-lg font-bold text-slate-800">{trait}</h4>
+                        <span className={`text-xs px-2 py-1 rounded-full border flex items-center font-bold ${getDomainColor(info.domain)}`}>
+                          {getDomainIcon(info.domain)}
+                          {info.domain}
+                        </span>
+                      </div>
+                      <p className="text-sm text-slate-600">{info.desc}</p>
+                    </div>
+                  </div>
+                )
+              })}
+              {topTraits.length === 0 && (
+                <p className="text-center text-gray-500 py-4">你的回答較為分散，建議再測一次以獲得更準確的結果。</p>
+              )}
+            </div>
+          </div>
+
+          {/* 四大領域雷達圖/長條圖 */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 animate-in slide-in-from-bottom-4 duration-500 delay-300">
+            <h3 className="text-xl font-bold border-b pb-4 mb-6">四大領域能量分佈</h3>
+            <div className="space-y-4">
+              {Object.entries(domains).map(([domain, score]) => {
+                const percentage = totalScore > 0 ? (score / totalScore) * 100 : 0;
+                return (
+                  <div key={domain}>
+                    <div className="flex justify-between text-sm font-bold mb-1">
+                      <span className="flex items-center text-slate-700">
+                        {getDomainIcon(domain)} {domain}
+                      </span>
+                      <span className="text-slate-500">{Math.round(percentage)}%</span>
+                    </div>
+                    <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                      <div 
+                        className={`h-2.5 rounded-full ${
+                          domain === '執行力' ? 'bg-purple-500' : 
+                          domain === '影響力' ? 'bg-orange-500' : 
+                          domain === '關係建立' ? 'bg-pink-500' : 'bg-blue-500'
+                        }`}
+                        style={{ width: `${percentage}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            <div className="mt-6 p-4 bg-indigo-50 rounded-lg text-sm text-indigo-800">
+              <strong>分析提示：</strong>文件指出，一個健康的團隊需要這四種力量。你不必成為全才，只要在你的核心領域發揮到極致，並與其他領域的人互補即可。
+            </div>
+          </div>
+
+          <div className="text-center pb-8">
+            <button 
+              onClick={handleStart}
+              className="inline-flex items-center gap-2 text-indigo-600 font-bold hover:text-indigo-800 transition-colors"
+            >
+              <RotateCcw className="w-4 h-4" /> 重新測試
+            </button>
+            <p className="text-xs text-gray-400 mt-4">註：此為基於《發現你的優勢》概念設計的輕量級體驗測評，完整結果請參考官方 StrengthsFinder 測驗。</p>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+};
+
+export default App;
+
